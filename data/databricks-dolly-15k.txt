@@ -1,0 +1,22 @@
+=== databricks-dolly-15k Dataset Samples ===
+
+--- Example 1 ---
+Instruction: When did Virgin Australia start operating?
+Response: Virgin Australia commenced services on 31 August 2000 as Virgin Blue, with two aircraft on a single route.
+
+--- Example 2 ---
+Instruction: Which is a species of fish? Tope or Rope
+Response: Tope
+
+--- Example 3 ---
+Instruction: Why can camels survive for long without water?
+Response: Camels use the fat in their humps to keep them filled with energy and hydration for long periods of time.
+
+--- Example 4 ---
+Instruction: Alice's parents have three daughters: Amy, Jessy, and what’s the name of the third daughter?
+Response: The name of the third daughter is Alice
+
+--- Example 5 ---
+Instruction: When was Tomoaki Komorida born?
+Response: Tomoaki Komorida was born on July 10,1981.
+

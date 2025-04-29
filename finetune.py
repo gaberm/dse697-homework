@@ -8,10 +8,9 @@ from transformers import (
 )
 from peft import get_peft_model, LoraConfig
 from trl import SFTTrainer, SFTConfig
+from tqdm import tqdm
 
 def main():
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
-
     base_model_name = "models/llama-2-7b"
 
     # Tokenizer
@@ -22,27 +21,30 @@ def main():
     # Model
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_name,
-        device_map="cuda:0",
         cache_dir=".cache",
     )
+    print("Cuda available:", torch.cuda.is_available())
+    base_model = base_model.to("cuda" if torch.cuda.is_available() else "cpu")
     base_model.config.use_cache = False
     base_model.config.pretraining_tp = 1
 
     # Generate a response and decode it to a string
-    example_prompts = [
+    system_prompt = "<s>[INST] <<SYS>>\nYou are a helpful assistant.\n<</SYS>>"
+    user_prompts = [
         "What is 2 + 2?", 
         "What is the capital of France?", 
         "Who long is the Great Wall of China?",
         "What is the largest mammal?",
         "What is the speed of light?",
         ]
-    example_responses = []
-    for prompt in example_prompts:
-        inputs = tokenizer(prompt, return_tensors="pt")
+    responses_pretrained = []
+    for user_prompt in tqdm(user_prompts, desc="Generating example responses"):
+        input = f"{system_prompt}\n\n{user_prompt} [/INST]"
+        inputs = tokenizer(input, return_tensors="pt")
         inputs = {k: v.to("cuda") for k, v in inputs.items()}
-        model = model.to("cuda")
+        base_model = base_model.to("cuda")
 
-        generated_ids = model.generate(
+        generated_ids = base_model.generate(
             inputs["input_ids"],
             max_length=512,  
             num_return_sequences=1,
@@ -51,31 +53,32 @@ def main():
             top_p=0.9,
         )
 
-        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-        example_responses.append(generated_text)
+        output = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        responses_pretrained.append(output)
 
     # Save the example responses to a file
-    with open("data/example_responses.txt", "w") as f:
-        for i, response in enumerate(example_responses):
-            f.write(f"--- Example {i+1} ---\n")
-            f.write(f"Response: {response}\n\n")
+    with open("data/responses_pretrained.txt", "w") as f:
+        for idx, pair in enumerate(zip(user_prompts, responses_pretrained)):
+            f.write(f"--- Example {idx+1} ---\n")
+            f.write(f"Prompt: {pair[0]}\n")
+            f.write(f"Response: {pair[1]}\n\n")
 
     # Data set
     dataset = load_from_disk("data/databricks-dolly-15k")
     text = []
-    for i in range(len(dataset)):
-        text.append(f"<s>[INST] {dataset['instruction'][i]} [/INST] {dataset['response'][i]} </s>")
+    for row in tqdm(dataset['train'], desc="Processing dataset", unit="example"):
+        text.append(f"{system_prompt}\n\n{row['instruction']}\n[/INST]\n{row['response']}</s>")
     train_data = Dataset.from_dict({"text": text})
 
     # Training Params
     train_params = SFTConfig(
-        output_dir="./results_modified",
-        num_train_epochs=3,
+        output_dir=".cache/checkpoints",
+        num_train_epochs=1,
         per_device_train_batch_size=1,
         gradient_accumulation_steps=1,
         #optim="paged_adamw_32bit",
         save_steps=50,
-        logging_steps=50,
+        logging_steps=len(train_data) // 2,
         learning_rate=4e-5,
         weight_decay=0.001,
         fp16=False,
@@ -86,6 +89,7 @@ def main():
         group_by_length=True,
         lr_scheduler_type="constant",
         dataset_text_field="text",
+        report_to=[],
     )
 
     # LoRA Config
@@ -113,9 +117,10 @@ def main():
     model.save_pretrained("models/llama-2-7b-finetuned")
 
     # Regenerate the example responses with the fine-tuned model
-    example_responses_finetuned = []
-    for prompt in example_prompts:
-        inputs = tokenizer(prompt, return_tensors="pt")
+    responses_finetuned = []
+    for user_prompt in tqdm(user_prompts, desc="Generating example responses"):
+        input = f"{system_prompt}\n\n{user_prompt} [/INST]"
+        inputs = tokenizer(input, return_tensors="pt")
         inputs = {k: v.to("cuda") for k, v, in inputs.items()}
         model = model.to("cuda")
 
@@ -128,14 +133,15 @@ def main():
             top_p=0.9,
         )
 
-        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-        example_responses_finetuned.append(generated_text)
+        output = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        responses_finetuned.append(output)
 
     # Save the fine-tuned example responses to a file
-    with open("data/example_responses_finetuned.txt", "w") as f:
-        for i, response in enumerate(example_responses_finetuned):
-            f.write(f"--- Example {i+1} ---\n")
-            f.write(f"Response: {response}\n\n")
+    with open("data/responses_finetuned.txt", "w") as f:
+        for idx, pair in enumerate(zip(user_prompts, responses_finetuned)):
+            f.write(f"--- Example {idx+1} ---\n")
+            f.write(f"Prompt: {pair[0]}\n")
+            f.write(f"Response: {pair[1]}\n\n")
 
 if __name__ == "__main__":
     main()

@@ -19,8 +19,5 @@ module load craype-accel-amd-gfx90a
 # Activate the new environment
 source activate /gpfs/wolf2/olcf/trn040/scratch/mgaber/envs/hf-transformers
 
-# Ensure we are running in the desired working directory
-working_dir="/gpfs/wolf2/olcf/trn040/scratch/tfreem10"
-cd "${working_dir}"
-
-python fine-tune.py
+/gpfs/wolf2/olcf/trn040/scratch/mgaber/envs/hf-transformers/bin/python3.12 finetune.py
+echo "Fine-tuning completed."

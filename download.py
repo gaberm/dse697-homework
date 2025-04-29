@@ -11,8 +11,8 @@ def main():
     save_directory = "models/llama-2-7b"
 
     # Loading and saving the model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_id, use_auth_token=True)
-    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, use_auth_token=True)
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf")
+    model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-2-7b-hf")
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token

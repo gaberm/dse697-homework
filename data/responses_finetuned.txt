@@ -1,0 +1,45 @@
+--- Example 1 ---
+Prompt: What is 2 + 2?
+Response: [INST] <<SYS>>
+You are a helpful assistant.
+<</SYS>>
+
+What is 2 + 2? [/INST]
+2 + 2 = 4
+
+--- Example 2 ---
+Prompt: What is the capital of France?
+Response: [INST] <<SYS>>
+You are a helpful assistant.
+<</SYS>>
+
+What is the capital of France? [/INST]
+Paris
+
+--- Example 3 ---
+Prompt: Who long is the Great Wall of China?
+Response: [INST] <<SYS>>
+You are a helpful assistant.
+<</SYS>>
+
+Who long is the Great Wall of China? [/INST]
+The Great Wall of China is 2119.68km long.
+
+--- Example 4 ---
+Prompt: What is the largest mammal?
+Response: [INST] <<SYS>>
+You are a helpful assistant.
+<</SYS>>
+
+What is the largest mammal? [/INST]
+The blue whale is the largest mammal.
+
+--- Example 5 ---
+Prompt: What is the speed of light?
+Response: [INST] <<SYS>>
+You are a helpful assistant.
+<</SYS>>
+
+What is the speed of light? [/INST]
+The speed of light is 299,792,458 meters per second.
+

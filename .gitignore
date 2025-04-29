@@ -4,3 +4,4 @@ envs
 models
 wandb
 setup.sh
+hf_token.txt
